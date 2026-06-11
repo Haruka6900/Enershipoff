@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EnerShip Travel</title>
+<style>
+  :root {
+    --bg:        #0A0E1A;
+    --bg2:       #111827;
+    --bg3:       #1C2333;
+    --border:    #1E2D45;
+    --accent:    #00C6FF;
+    --accent2:   #0072FF;
+    --warn:      #F59E0B;
+    --danger:    #EF4444;
+    --ok:        #10B981;
+    --text:      #E8F0FE;
+    --muted:     #6B7A99;
+    --card:      #141B2D;
+    --card2:     #1A2438;
+    --font-mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, #0a2040 0%, var(--bg) 70%);
+  }
+  .logo-wrap { text-align: center; margin-bottom: 40px; }
+  .logo-anchor {
+    width: 72px; height: 72px; border-radius: 18px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; font-size: 32px;
+  }
+  .logo-title { font-size: 26px; font-weight: 700; letter-spacing: 1px; }
+  .logo-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .login-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 360px;
+  }
+  .login-card h2 { font-size: 18px; margin-bottom: 6px; }
+  .login-card p { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: .5px; text-transform: uppercase; }
+  .field input {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; color: var(--text);
+    font-size: 15px; outline: none; transition: border-color .2s;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%; background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; font-size: 15px; font-weight: 600; padding: 13px;
+    border: none; border-radius: 12px; cursor: pointer; transition: opacity .2s;
+    margin-top: 4px;
+  }
+  .btn-primary:active { opacity: .8; }
+  .login-error { color: var(--danger); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
+  .role-badges { display: flex; gap: 10px; margin-top: 20px; }
+  .role-badge {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .role-badge:hover, .role-badge.active { border-color: var(--accent); background: rgba(0,198,255,.07); }
+  .role-badge .rb-icon { font-size: 20px; margin-bottom: 4px; }
+  .role-badge .rb-name { font-size: 12px; font-weight: 600; }
+  .role-badge .rb-hint { font-size: 10px; color: var(--muted); }
+
+  /* ── APP SHELL ── */
+  #app { display: none; flex-direction: column; height: 100vh; }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: var(--bg2); border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent2), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .topbar-title { font-size: 15px; font-weight: 700; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .bt-status {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 10px; font-size: 11px; cursor: pointer;
+  }
+  .bt-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); transition: background .3s; }
+  .bt-dot.connected { background: var(--ok); }
+  .role-pill {
+    background: rgba(0,198,255,.12); border: 1px solid rgba(0,198,255,.25);
+    border-radius: 12px; padding: 3px 10px; font-size: 11px; color: var(--accent);
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    display: flex; background: var(--bg2); border-top: 1px solid var(--border);
+    flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 4px 8px; cursor: pointer; transition: color .2s;
+    color: var(--muted); font-size: 10px; gap: 3px; border: none; background: none;
+    -webkit-tap-highlight-color: transparent; position: relative;
+  }
+  .nav-item .ni-icon { font-size: 20px; }
+  .nav-item.active { color: var(--accent); }
+  .nav-item.active .ni-icon { filter: drop-shadow(0 0 4px var(--accent)); }
+
+  /* Pages */
+  .page { display: none; flex: 1; overflow-y: auto; padding: 16px; }
+  .page.active { display: block; }
+
+  /* ── DASHBOARD ── */
+  .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .kpi-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 12px; position: relative; overflow: hidden; transition: border-color .3s;
+  }
+  .kpi-card.alarm { border-color: var(--danger); }
+  .kpi-card.warn-border { border-color: var(--warn); }
+  .kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi-unit { font-size: 11px; color: var(--muted); margin-left: 2px; }
+  .kpi-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .kpi-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width .5s; }
+  .kpi-bar-fill.danger { background: var(--danger); }
+  .kpi-bar-fill.warn { background: var(--warn); }
+  .kpi-status { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+  .kpi-status.alarm { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+  .kpi-status.warn { background: var(--warn); }
+
+  /* Current/Voltage matrix */
+  .matrix-table { width: 100%; border-collapse: collapse; }
+  .matrix-table th { font-size: 10px; color: var(--muted); text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  .matrix-table td { font-size: 13px; padding: 7px 8px; border-bottom: 1px solid rgba(30,45,69,.5); font-variant-numeric: tabular-nums; }
+  .matrix-table tr:last-child td { border-bottom: none; }
+  .matrix-table .eq-name { color: var(--muted); font-size: 11px; }
+  .matrix-table .val-i { color: var(--accent); font-weight: 600; }
+  .matrix-table .val-v { color: #F59E0B; font-weight: 600; }
+  .matrix-table .val-p { color: var(--ok); font-size: 11px; }
+
+  /* ── GPS MAP ── */
+  #map-container {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; height: 260px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #map-container canvas { width: 100%; height: 100%; }
+  .gps-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(10,14,26,.9));
+    padding: 12px 14px 10px; display: flex; gap: 16px;
+  }
+  .gps-stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; }
+  .gps-stat-value { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ── ALARMS ── */
+  .alarm-list { display: flex; flex-direction: column; gap: 8px; }
+  .alarm-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .alarm-item.active-alarm { border-color: var(--danger); background: rgba(239,68,68,.05); }
+  .alarm-item.warn-alarm { border-color: var(--warn); background: rgba(245,158,11,.05); }
+  .alarm-icon { font-size: 22px; flex-shrink: 0; }
+  .alarm-body { flex: 1; }
+  .alarm-name { font-size: 13px; font-weight: 600; }
+  .alarm-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .alarm-time { font-size: 10px; color: var(--muted); }
+  .alarm-badge {
+    font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600;
+    background: rgba(16,185,129,.15); color: var(--ok);
+  }
+  .alarm-badge.danger { background: rgba(239,68,68,.15); color: var(--danger); }
+  .alarm-badge.warn { background: rgba(245,158,11,.15); color: var(--warn); }
+
+  /* ── HISTORY ── */
+  .history-controls { display: flex; gap: 8px; margin-bottom: 12px; }
+  .history-controls input, .history-controls select {
+    flex: 1; background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none;
+  }
+  .btn-sm {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 14px; color: var(--text); font-size: 12px;
+    cursor: pointer; white-space: nowrap;
+  }
+  .btn-sm:active { opacity: .7; }
+  .btn-accent { background: linear-gradient(135deg, var(--accent2), var(--accent)); border: none; color: #fff; font-weight: 600; }
+  .history-row {
+    display: grid; grid-template-columns: 70px 60px 52px 52px 52px 52px;
+    gap: 4px; padding: 8px 0; border-bottom: 1px solid rgba(30,45,69,.5);
+    font-size: 11px; font-variant-numeric: tabular-nums;
+  }
+  .history-row.header { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+
+  /* ── ADMIN ── */
+  .admin-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+  .admin-section-title {
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  }
+  .admin-row { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(30,45,69,.4); gap: 10px; }
+  .admin-row:last-child { border-bottom: none; }
+  .admin-row-label { flex: 1; font-size: 13px; }
+  .admin-row-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .admin-input {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; color: var(--text); font-size: 13px; width: 90px; outline: none;
+    text-align: right;
+  }
+  .admin-input:focus { border-color: var(--accent); }
+  .toggle {
+    width: 42px; height: 24px; border-radius: 12px; background: var(--border);
+    position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent2); }
+  .toggle-knob {
+    width: 18px; height: 18px; border-radius: 9px; background: #fff;
+    position: absolute; top: 3px; left: 3px; transition: left .2s;
+  }
+  .toggle.on .toggle-knob { left: 21px; }
+
+  /* BT Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 100; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0; width: 100%; max-width: 520px;
+    padding: 20px; max-height: 80vh; overflow-y: auto;
+  }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .device-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 8px; cursor: pointer; transition: border-color .2s;
+  }
+  .device-item:hover { border-color: var(--accent); }
+  .device-icon { font-size: 24px; }
+  .device-name { font-size: 14px; font-weight: 600; }
+  .device-mac { font-size: 11px; color: var(--muted); }
+  .btn-close { width: 100%; background: var(--border); border: none; color: var(--text); border-radius: 12px; padding: 12px; cursor: pointer; margin-top: 8px; font-size: 14px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 18px; font-size: 13px;
+    z-index: 200; display: none; white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  }
+  .toast.show { display: block; animation: fadeInUp .3s ease; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+  .pulse { animation: pulse 1.5s infinite; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .no-data { color: var(--muted); font-size: 13px; text-align: center; padding: 24px 0; }
+
+  .eq-names-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .eq-name-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .eq-name-item label { font-size: 10px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .eq-name-item input { width: 100%; background: transparent; border: none; color: var(--text); font-size: 12px; outline: none; }
+
+  .user-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid rgba(30,45,69,.4); }
+  .user-item:last-child { border-bottom: none; }
+  .user-avatar { width: 34px; height: 34px; border-radius: 10px; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .user-info { flex: 1; }
+  .user-name { font-size: 13px; font-weight: 600; }
+  .user-role { font-size: 11px; color: var(--muted); }
+  .btn-del { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.2); color: var(--danger); border-radius: 8px; padding: 5px 10px; font-size: 11px; cursor: pointer; }
+
+  .status-bar {
+    background: var(--bg3); border-bottom: 1px solid var(--border);
+    padding: 4px 16px; display: flex; align-items: center; gap: 16px; font-size: 10px; color: var(--muted);
+  }
+  .status-bar span { display: flex; align-items: center; gap: 4px; }
+
+  .log-entry { font-size: 11px; font-family: var(--font-mono); padding: 4px 0; border-bottom: 1px solid rgba(30,45,69,.3); }
+  .log-entry .log-time { color: var(--accent); }
+  .log-entry .log-msg { color: var(--muted); }
+
+  /* Puissance totale banner */
+  .power-banner {
+    background: var(--card2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; margin-bottom: 4px;
+  }
+  .power-banner-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .power-banner-value { font-size: 18px; font-weight: 700; color: var(--ok); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="logo-wrap">
+    <div class="logo-anchor">⚓</div>
+    <div class="logo-title">EnerShip Travel</div>
+    <div class="logo-sub">Surveillance énergétique embarquée</div>
+  </div>
+  <div class="login-card">
+    <h2>Connexion</h2>
+    <p>Choisissez votre profil ou connectez-vous</p>
+    <div class="role-badges">
+      <div class="role-badge active" onclick="selectRole('visitor')" id="rb-visitor">
+        <div class="rb-icon">👁️</div>
+        <div class="rb-name">Visiteur</div>
+        <div class="rb-hint">Lecture seule</div>
+      </div>
+      <div class="role-badge" onclick="selectRole('admin')" id="rb-admin">
+        <div class="rb-icon">🔧</div>
+        <div class="rb-name">Admin</div>
+        <div class="rb-hint">Accès complet</div>
+      </div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="field">
+        <label>Nom d'utilisateur</label>
+        <input type="text" id="login-user" placeholder="visiteur" value="visiteur">
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="login-pass" placeholder="••••••••" value="">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Se connecter</button>
+      <div class="login-error" id="login-error">Identifiants incorrects</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">⚓</div>
+      <div class="topbar-title">EnerShip Travel</div>
+    </div>
+    <div class="topbar-right">
+      <div class="bt-status" onclick="openBTModal()">
+        <div class="bt-dot" id="bt-dot"></div>
+        <span id="bt-label">Déconnecté</span>
+      </div>
+      <div class="role-pill" id="role-pill">Visiteur</div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span>⏱ <span id="sb-time">--:--:--</span></span>
+    <span>📡 <span id="sb-gps">GPS : attente</span></span>
+    <span>🔄 <span id="sb-refresh">Simulation</span></span>
+  </div>
+
+  <!-- Pages -->
+  <div style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+
+      <div class="section-title">Moteur</div>
+      <div class="grid-2">
+        <!-- RPM : max 3000 tr/min selon simulation Arduino (SIM_RPM_MAX) -->
+        <div class="kpi-card" id="kpi-rpm">
+          <div class="kpi-status" id="kpi-rpm-status"></div>
+          <div class="kpi-label">Régime moteur</div>
+          <div><span class="kpi-value" id="val-rpm">0</span><span class="kpi-unit">tr/min</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-rpm" style="width:0%"></div></div>
+        </div>
+        <!-- Couple : max 500 Nm selon FIBOS FA117 (COUPLE_MAX_NM) -->
+        <div class="kpi-card" id="kpi-couple">
+          <div class="kpi-status" id="kpi-couple-status"></div>
+          <div class="kpi-label">Couple moteur</div>
+          <div><span class="kpi-value" id="val-couple">0</span><span class="kpi-unit">Nm</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-couple" style="width:0%"></div></div>
+        </div>
+        <!-- Température : DS18B20, seuil 95°C (SEUIL_TEMP_MAX) -->
+        <div class="kpi-card" id="kpi-temp">
+          <div class="kpi-status" id="kpi-temp-status"></div>
+          <div class="kpi-label">Temp. refroidissement</div>
+          <div><span class="kpi-value" id="val-temp">--</span><span class="kpi-unit">°C</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-temp" style="width:0%"></div></div>
+        </div>
+        <!-- Pression : MPRLS, unité PSI (cohérent Arduino), seuil min 1.5 PSI, max 5 PSI -->
+        <div class="kpi-card" id="kpi-pression">
+          <div class="kpi-status" id="kpi-pression-status"></div>
+          <div class="kpi-label">Pression huile</div>
+          <div><span class="kpi-value" id="val-pression">--</span><span class="kpi-unit">PSI</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-pression" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="section-title">Réservoirs</div>
+      <div class="grid-2">
+        <!-- Carburant : SEN0205 A4, seuil 10% -->
+        <div class="kpi-card" id="kpi-carbu">
+          <div class="kpi-status" id="kpi-carbu-status"></div>
+          <div class="kpi-label">Carburant</div>
+          <div><span class="kpi-value" id="val-carbu">--</span><span class="kpi-unit">%</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-carbu" style="width:0%"></div></div>
+        </div>
+        <!-- Refroidissement : SEN0205 A5, seuil 10% -->
+        <div class="kpi-card" id="kpi-refroid">
+          <div class="kpi-status" id="kpi-refroid-status"></div>
+          <div class="kpi-label">Refroidissement</div>
+          <div><span class="kpi-value" id="val-refroid">--</span><span class="kpi-unit">%</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-refroid" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- Tableau courants/tensions : 8 équipements ACS712 + diviseurs tension -->
+      <div class="section-title">Électrique – Courants & Tensions</div>
+      <div class="admin-section">
+        <table class="matrix-table">
+          <thead><tr>
+            <th>Équipement</th><th>I (A)</th><th>U (V)</th><th>P (W)</th>
+          </tr></thead>
+          <tbody id="elec-tbody"></tbody>
+        </table>
+      </div>
+      <!-- Puissance électrique totale calculée -->
+      <div class="power-banner">
+        <div class="power-banner-label">Puissance totale consommée</div>
+        <div><span class="power-banner-value" id="val-power-total">0</span><span style="font-size:12px;color:var(--muted);margin-left:4px">W</span></div>
+      </div>
+
+      <div class="section-title">Navigation GPS</div>
+      <div id="map-container">
+        <canvas id="map-canvas"></canvas>
+        <div class="gps-overlay">
+          <div class="gps-stat"><div class="gps-stat-label">Latitude</div><div class="gps-stat-value" id="val-lat">--</div></div>
+          <div class="gps-stat"><div class="gps-stat-label">Longitude</div><div class="gps-stat-value" id="val-lon">--</div></div>
+          <div class="gps-stat"><div class="gps-stat-label">Vitesse</div><div class="gps-stat-value" id="val-spd">-- nd</div></div>
+          <div class="gps-stat"><div class="gps-stat-label">Cap</div><div class="gps-stat-value" id="val-hdg">--°</div></div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ALARMES -->
+    <div class="page" id="page-alarms">
+      <div class="section-title">Alarmes actives</div>
+      <div class="alarm-list" id="alarm-list-active"></div>
+      <div class="section-title">État du système</div>
+      <div class="alarm-list" id="alarm-list-all"></div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- HISTORIQUE — colonnes enrichies : Heure, RPM, T°C, Pression(PSI), Carbu%, I1 -->
+    <div class="page" id="page-history">
+      <div class="history-controls">
+        <input type="date" id="hist-date">
+        <button class="btn-sm" onclick="exportCSV()">📥 CSV</button>
+        <button class="btn-sm btn-accent" onclick="exportPDF()">📄 PDF</button>
+      </div>
+      <div class="history-row header">
+        <span>Heure</span><span>RPM</span><span>T°C</span><span>P PSI</span><span>Carbu</span><span>I1 A</span>
+      </div>
+      <div id="history-rows"></div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="page" id="page-admin">
+      <div id="admin-locked" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
+        🔒<br><br>Accès réservé à l'administrateur
+      </div>
+      <div id="admin-content">
+
+        <!-- Seuils alarme — UNITÉS COHÉRENTES avec l'Arduino -->
+        <div class="admin-section">
+          <div class="admin-section-title">🔔 Seuils d'alarme</div>
+          <!-- Température : SEUIL_TEMP_MAX = 95°C dans les deux codes Arduino -->
+          <div class="admin-row">
+            <div><div class="admin-row-label">Température max</div><div class="admin-row-sub">Surchauffe moteur (DS18B20)</div></div>
+            <input class="admin-input" type="number" id="th-temp" value="95"> <span style="font-size:11px;color:var(--muted)">°C</span>
+          </div>
+          <!-- Pression : SEUIL_PRESSION_MIN = 1.5 PSI — affiché en PSI, cohérent avec MPRLS -->
+          <div class="admin-row">
+            <div><div class="admin-row-label">Pression huile min</div><div class="admin-row-sub">MPRLS – alarme P_LOW (seuil bas)</div></div>
+            <input class="admin-input" type="number" id="th-pression-min" value="1.5" step="0.1"> <span style="font-size:11px;color:var(--muted)">PSI</span>
+          </div>
+          <!-- Pression max : SEUIL_PRESSION_MAX = 5.0 PSI — alarme P_HIGH -->
+          <div class="admin-row">
+            <div><div class="admin-row-label">Pression huile max</div><div class="admin-row-sub">MPRLS – alarme P_HIGH (seuil haut)</div></div>
+            <input class="admin-input" type="number" id="th-pression-max" value="5.0" step="0.1"> <span style="font-size:11px;color:var(--muted)">PSI</span>
+          </div>
+          <!-- Carburant : SEUIL_NIVEAU_MIN = 10% -->
+          <div class="admin-row">
+            <div><div class="admin-row-label">Carburant min</div><div class="admin-row-sub">SEN0205 A4 – alarme NC_LOW</div></div>
+            <input class="admin-input" type="number" id="th-carbu" value="10"> <span style="font-size:11px;color:var(--muted)">%</span>
+          </div>
+          <!-- Refroidissement : SEUIL_NIVEAU_MIN = 10% -->
+          <div class="admin-row">
+            <div><div class="admin-row-label">Refroidissement min</div><div class="admin-row-sub">SEN0205 A5 – alarme NR_LOW</div></div>
+            <input class="admin-input" type="number" id="th-refroid" value="10"> <span style="font-size:11px;color:var(--muted)">%</span>
+          </div>
+          <div class="admin-row" style="justify-content:flex-end">
+            <button class="btn-sm btn-accent" onclick="saveThresholds()">Appliquer & envoyer à l'Arduino</button>
+          </div>
+        </div>
+
+        <!-- Noms équipements : identiques aux nomEquipement[] des codes Arduino -->
+        <div class="admin-section">
+          <div class="admin-section-title">🏷️ Noms des équipements (C0–C7 / V0–V7)</div>
+          <div style="padding:12px 16px">
+            <div class="eq-names-grid" id="eq-names-grid"></div>
+            <button class="btn-sm btn-accent" style="margin-top:10px;width:100%" onclick="saveEqNames()">Enregistrer</button>
+          </div>
+        </div>
+
+        <!-- Bluetooth -->
+        <div class="admin-section">
+          <div class="admin-section-title">📡 Bluetooth HC-06</div>
+          <!-- Intervalle : 500ms par défaut, cohérent avec INTERVALLE_BT = 500 dans l'Arduino -->
+          <div class="admin-row">
+            <div><div class="admin-row-label">Intervalle de polling</div><div class="admin-row-sub">Doit correspondre à INTERVALLE_BT dans l'Arduino</div></div>
+            <select class="admin-input" id="bt-interval" style="width:auto;text-align:left" onchange="restartSim()">
+              <option value="500" selected>500 ms</option>
+              <option value="1000">1 s</option>
+              <option value="2000">2 s</option>
+              <option value="5000">5 s</option>
+            </select>
+          </div>
+          <div class="admin-row">
+            <div><div class="admin-row-label">Ping Arduino</div><div class="admin-row-sub">Envoie $PING → attend $PONG</div></div>
+            <button class="btn-sm btn-accent" onclick="sendPing()">Ping</button>
+          </div>
+          <div class="admin-row">
+            <div><div class="admin-row-label">Mode simulation</div><div class="admin-row-sub">Génère des données sans matériel physique</div></div>
+            <div class="toggle on" id="sim-toggle" onclick="toggleSimulation()"><div class="toggle-knob"></div></div>
+          </div>
+        </div>
+
+        <!-- Utilisateurs -->
+        <div class="admin-section">
+          <div class="admin-section-title">👥 Utilisateurs</div>
+          <div id="user-list"></div>
+          <div class="admin-row">
+            <input class="admin-input" type="text" id="new-user" placeholder="Identifiant" style="width:120px;text-align:left">
+            <button class="btn-sm btn-accent" onclick="addUser()">+ Ajouter visiteur</button>
+          </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="admin-section">
+          <div class="admin-section-title">📋 Journal d'événements</div>
+          <div style="padding:10px 14px; max-height:180px; overflow-y:auto;" id="log-container"></div>
+          <div class="admin-row" style="justify-content:flex-end">
+            <button class="btn-sm" onclick="clearLogs()">Vider les logs</button>
+          </div>
+        </div>
+
+        <div style="height:16px"></div>
+      </div>
+    </div>
+
+  </div><!-- end pages wrapper -->
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="switchPage('dashboard',this)">
+      <span class="ni-icon">📊</span><span>Tableau</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('alarms',this)">
+      <span class="ni-icon">🔔</span><span>Alarmes</span>
+      <span id="alarm-badge" style="display:none;position:absolute;top:8px;background:var(--danger);color:#fff;border-radius:8px;font-size:9px;padding:1px 5px">0</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('history',this)">
+      <span class="ni-icon">📈</span><span>Historique</span>
+    </button>
+    <button class="nav-item" onclick="switchPage('admin',this)">
+      <span class="ni-icon">⚙️</span><span>Admin</span>
+    </button>
+  </div>
+</div>
+
+<!-- Bluetooth modal -->
+<div class="modal-overlay" id="bt-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Connexion Bluetooth HC-06</div>
+    <div id="bt-scanning" style="text-align:center;padding:16px;color:var(--muted)">
+      <span class="pulse">🔍 Recherche EnerShip_BT / HC-06…</span>
+    </div>
+    <div id="bt-devices"></div>
+    <button class="btn-close" onclick="closeBTModal()">Annuler</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// Unités cohérentes avec les codes Arduino :
+//   pression  → PSI  (MPRLS, pas de conversion dans parseBTFrame)
+//   temp      → °C   (DS18B20)
+//   carbu     → %    (SEN0205 A4)
+//   refroid   → %    (SEN0205 A5)
+//   couple    → Nm   (FIBOS FA117, COUPLE_MAX_NM = 500)
+//   rpm       → tr/min (Hall, SIM_RPM_MAX = 3000)
+//   courant[] → A    (ACS712-20A, 8 capteurs via MUX1)
+//   tension[] → V    (diviseur 5:1, 8 capteurs via MUX2, plage 0-25V)
+// ═══════════�����═══════════════════════════════════════════════════════
+const STATE = {
+  role: 'visitor',
+  btConnected: false,
+  simMode: true,
+  simInterval: null,
+  btCharacteristic: null,  // Web Bluetooth characteristic handle
+  data: {
+    courant: Array(8).fill(0),
+    tension: Array(8).fill(0),
+    rpm: 0, couple: 0, temp: 0, pression: 0,
+    carbu: 0, refroid: 0, lat: null, lon: null, spd: 0, hdg: 0,
+    gpsValid: false
+  },
+  // Seuils en PSI pour la pression (cohérent avec SEUIL_PRESSION_MIN/MAX Arduino)
+  thresholds: {
+    temp: 95,          // °C  — SEUIL_TEMP_MAX
+    pressionMin: 1.5,  // PSI — SEUIL_PRESSION_MIN
+    pressionMax: 5.0,  // PSI — SEUIL_PRESSION_MAX (P_HIGH)
+    carbu: 10,         // %   — SEUIL_NIVEAU_MIN
+    refroid: 10        // %   — SEUIL_NIVEAU_MIN
+  },
+  // Noms identiques à nomEquipement[] dans les codes Arduino
+  eqNames: [
+    'Batterie 1','Batterie 2','Batterie 3',
+    'Propulseur','Guindeau','Ventilateur',
+    'Alternateur 140A','Alternateur 80A'
+  ],
+  history: [],
+  logs: [],
+  users: [
+    { id:'admin',    role:'Administrateur', emoji:'👑' },
+    { id:'visiteur', role:'Visiteur',       emoji:'👤' }
+  ],
+  alarmStates: {},
+  activePage: 'dashboard'
+};
+
+// Identifiants — admin/Enershipadmin, visiteur/sans mot de passe
+const CREDS = { admin: 'Enershipadmin', visiteur: '' };
+
+// GPS trail
+const gpsTrail = [];
+
+// ═══════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════
+let selectedRole = 'visitor';
+function selectRole(r) {
+  selectedRole = r;
+  document.querySelectorAll('.role-badge').forEach(b => b.classList.remove('active'));
+  document.getElementById('rb-' + (r === 'admin' ? 'admin' : 'visitor')).classList.add('active');
+  if (r === 'admin') {
+    document.getElementById('login-user').value = 'admin';
+    document.getElementById('login-pass').value = '';
+  } else {
+    document.getElementById('login-user').value = 'visiteur';
+    document.getElementById('login-pass').value = '';
+  }
+}
+
+function doLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err  = document.getElementById('login-error');
+  let ok = false;
+  if (user === 'admin' && pass === CREDS.admin) { STATE.role = 'admin'; ok = true; }
+  else if (user === 'visiteur' && pass === CREDS.visiteur) { STATE.role = 'visitor'; ok = true; }
+  else {
+    STATE.users.forEach(u => {
+      if (u.id === user && CREDS[user] !== undefined && pass === CREDS[user]) {
+        STATE.role = u.role === 'Administrateur' ? 'admin' : 'visitor';
+        ok = true;
+      }
+    });
+  }
+  if (!ok) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  launchApp();
+}
+
+function launchApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('role-pill').textContent = STATE.role === 'admin' ? 'Admin' : 'Visiteur';
+  initApp();
+}
+
+// ═══════════════════════════════════════════════════════
+// APP INIT
+// ═══════════════════════════════════════════════════════
+function initApp() {
+  buildEqNamesGrid();
+  buildUserList();
+  renderAlarms();
+  updateStatusBar();
+  startSimulation();
+  setInterval(updateStatusBar, 1000);
+  setInterval(saveHistoryPoint, 5000);
+  const adminContent = document.getElementById('admin-content');
+  const adminLocked  = document.getElementById('admin-locked');
+  if (STATE.role !== 'admin') {
+    adminContent.style.display = 'none';
+    adminLocked.style.display  = 'block';
+  }
+  document.getElementById('hist-date').value = new Date().toISOString().split('T')[0];
+  renderHistoryRows();
+  drawMap();
+  addLog('Système initialisé — Mode : ' + (STATE.simMode ? 'Simulation' : 'Live BT'));
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function switchPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  STATE.activePage = name;
+  if (name === 'alarms')  renderAlarms();
+  if (name === 'history') renderHistoryRows();
+}
+
+// ═══════════════════════════════════════════════════════
+// SIMULATION
+// Valeurs initiales calées sur l'exemple $DATA du dossier technique :
+//   $DATA,12.30,8.50,9.10,42.00,15.20,2.10,68.50,35.20,
+//         13.12,12.98,13.05,12.87,13.10,12.95,13.22,13.01,
+//         3.25,78.5,65.3,88.1,245.6,1850,48.370200,0.071800,5.2,275.3
+// GPS : Fécamp, Normandie (Lycée Anita Conti)
+// ═══════════════════════════════════════════════════════
+let simT = 0;
+// Valeurs de base extraites de l'exemple réel du dossier
+const BASE_I = [12.30, 8.50,  9.10, 42.00, 15.20,  2.10, 68.50, 35.20];
+const BASE_V = [13.12, 12.98, 13.05, 12.87, 13.10, 12.95, 13.22, 13.01];
+
+function startSimulation() {
+  if (STATE.simInterval) clearInterval(STATE.simInterval);
+  if (!STATE.simMode) return;
+  const interval = parseInt(document.getElementById('bt-interval').value) || 500;
+  STATE.simInterval = setInterval(() => {
+    simT += 0.05;
+    const d = STATE.data;
+    // RPM : 0–3000 tr/min (SIM_RPM_MAX)
+    d.rpm    = Math.round(1850 + Math.sin(simT * 0.3) * 600 + Math.random() * 50);
+    d.rpm    = Math.max(0, Math.min(3000, d.rpm));
+    // Couple : 0–500 Nm (COUPLE_MAX_NM)
+    d.couple = Math.round(245 + Math.sin(simT * 0.2) * 120 + Math.random() * 20);
+    d.couple = Math.max(0, Math.min(500, d.couple));
+    // Température : DS18B20, plage SIM -10 à 120°C, valeur normale 78°C
+    d.temp   = parseFloat((78.5 + Math.sin(simT * 0.1) * 15 + Math.random() * 2).toFixed(1));
+    d.temp   = Math.max(-10, Math.min(120, d.temp));
+    // Pression : MPRLS, plage 0–25 PSI (SIM_PRESSION_MAX), valeur normale ~3.25 PSI
+    d.pression = parseFloat((3.25 + Math.sin(simT * 0.15) * 1.2 + Math.random() * 0.15).toFixed(2));
+    d.pression = Math.max(0, Math.min(25, d.pression));
+    // Niveaux : SEN0205, 0–100%
+    d.carbu   = parseFloat(Math.max(0, Math.min(100, 65.3 - simT * 0.02 + Math.random())).toFixed(1));
+    d.refroid = parseFloat(Math.max(0, Math.min(100, 88.1 + Math.sin(simT * 0.08) * 8 + Math.random() * 2)).toFixed(1));
+    // Courants ACS712-20A (canaux C0–C7 via MUX1)
+    for (let i = 0; i < 8; i++) {
+      d.courant[i] = parseFloat((BASE_I[i] + (Math.random() - 0.5) * 2).toFixed(2));
+    }
+    // Tensions diviseur 5:1, plage 0–25V (canaux C0–C7 via MUX2)
+    for (let i = 0; i < 8; i++) {
+      d.tension[i] = parseFloat((BASE_V[i] + (Math.random() - 0.5) * 0.3).toFixed(2));
+    }
+    // GPS : coordonnées Fécamp (Seine-Maritime, Lycée Anita Conti)
+    d.lat = 49.7549 + Math.sin(simT * 0.02) * 0.002;
+    d.lon =  0.3717 + Math.cos(simT * 0.02) * 0.003;
+    d.spd = parseFloat((5.2 + Math.sin(simT * 0.1) * 0.8).toFixed(1));
+    d.hdg = Math.round(275 + Math.sin(simT * 0.05) * 15) % 360;
+    d.gpsValid = true;
+    gpsTrail.push({ lat: d.lat, lon: d.lon });
+    if (gpsTrail.length > 80) gpsTrail.shift();
+    updateUI();
+    checkAlarms();
+  }, interval);
+}
+
+function toggleSimulation() {
+  STATE.simMode = !STATE.simMode;
+  document.getElementById('sim-toggle').classList.toggle('on', STATE.simMode);
+  document.getElementById('sb-refresh').textContent = STATE.simMode ? 'Simulation' : 'Live BT';
+  if (STATE.simMode) startSimulation();
+  else clearInterval(STATE.simInterval);
+  addLog(STATE.simMode ? 'Mode simulation activé' : 'Mode simulation désactivé — En attente BT');
+}
+
+function restartSim() {
+  if (STATE.simMode) startSimulation();
+}
+
+// ═══════════════════════════════════════════════════════
+// UI UPDATE
+// Seuils cohérents avec les variables Arduino :
+//   SEUIL_TEMP_MAX, SEUIL_PRESSION_MIN, SEUIL_PRESSION_MAX,
+//   SEUIL_NIVEAU_MIN (carbu + refroid)
+// ═══════════════════════════════════════════════════════
+function updateUI() {
+  const d  = STATE.data;
+  const th = STATE.thresholds;
+
+  // Régime moteur : max 3000 tr/min (SIM_RPM_MAX)
+  const rpmAlarm = d.rpm > 2800;
+  const rpmWarn  = d.rpm > 2500;
+  setKPI('rpm', d.rpm, 3000, rpmAlarm, rpmWarn);
+
+  // Couple : max 500 Nm (COUPLE_MAX_NM)
+  setKPI('couple', d.couple, 500, false, false);
+
+  // Température : max 120°C (SIM_TEMP_MAX), alarme > SEUIL_TEMP_MAX
+  setKPI('temp', d.temp.toFixed(1), 120, d.temp > th.temp, d.temp > th.temp - 5);
+
+  // Pression : en PSI, plage 0–25 PSI (SIM_PRESSION_MAX / MPRLS)
+  // Alarme si < pressionMin (P_LOW) ou > pressionMax (P_HIGH)
+  const pAlarm = (d.pression < th.pressionMin && d.pression > 0) || d.pression > th.pressionMax;
+  const pWarn  = d.pression < th.pressionMin + 0.5 || d.pression > th.pressionMax - 0.5;
+  setKPI('pression', d.pression.toFixed(2), 25, pAlarm, pWarn);
+
+  // Niveaux
+  setKPI('carbu',   d.carbu.toFixed(1),   100, d.carbu < th.carbu,   d.carbu < th.carbu + 10);
+  setKPI('refroid', d.refroid.toFixed(1), 100, d.refroid < th.refroid, d.refroid < th.refroid + 10);
+
+  // Tableau électrique — 8 équipements
+  const tbody = document.getElementById('elec-tbody');
+  tbody.innerHTML = '';
+  let totalPower = 0;
+  for (let i = 0; i < 8; i++) {
+    const p = d.courant[i] * d.tension[i];
+    totalPower += Math.abs(p);
+    const tr = document.createElement('tr');
+    const sign = d.courant[i] >= 0 ? '+' : '';
+    tr.innerHTML = `
+      <td class="eq-name">${STATE.eqNames[i]}</td>
+      <td class="val-i">${sign}${d.courant[i].toFixed(1)}</td>
+      <td class="val-v">${d.tension[i].toFixed(1)}</td>
+      <td class="val-p">${Math.abs(p).toFixed(0)} W</td>`;
+    tbody.appendChild(tr);
+  }
+  document.getElementById('val-power-total').textContent = totalPower.toFixed(0);
+
+  // GPS
+  if (d.gpsValid && d.lat !== null) {
+    document.getElementById('val-lat').textContent = d.lat.toFixed(6) + '°';
+    document.getElementById('val-lon').textContent = d.lon.toFixed(6) + '°';
+    document.getElementById('val-spd').textContent = d.spd.toFixed(1) + ' nd';
+    document.getElementById('val-hdg').textContent = d.hdg + '°';
+    document.getElementById('sb-gps').textContent  = 'GPS : fix 3D';
+  } else {
+    ['val-lat','val-lon','val-spd','val-hdg'].forEach(id => document.getElementById(id).textContent = '--');
+    document.getElementById('sb-gps').textContent = 'GPS : attente';
+  }
+
+  drawMap();
+}
+
+function setKPI(id, value, max, isAlarm, isWarn) {
+  const el     = document.getElementById('val-' + id);
+  const bar    = document.getElementById('bar-' + id);
+  const status = document.getElementById('kpi-' + id + '-status');
+  const card   = document.getElementById('kpi-' + id);
+  if (el)     el.textContent = value;
+  if (bar) {
+    const pct = Math.min(100, Math.max(0, (parseFloat(value) / max) * 100));
+    bar.style.width = pct + '%';
+    bar.className   = 'kpi-bar-fill' + (isAlarm ? ' danger' : isWarn ? ' warn' : '');
+  }
+  if (status) status.className = 'kpi-status' + (isAlarm ? ' alarm' : isWarn ? ' warn' : '');
+  if (card)   card.className   = 'kpi-card'   + (isAlarm ? ' alarm' : isWarn ? ' warn-border' : '');
+}
+
+// ═══════════════════════════════════════════════════════
+// MAP — GPS trail (Fécamp / Manche)
+// ═══════════════════════════════════════════════════════
+function drawMap() {
+  const canvas    = document.getElementById('map-canvas');
+  const container = document.getElementById('map-container');
+  canvas.width  = container.clientWidth;
+  canvas.height = container.clientHeight;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0a1628');
+  grad.addColorStop(1, '#061020');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = 'rgba(0,198,255,0.07)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  if (gpsTrail.length < 2) {
+    ctx.fillStyle = 'rgba(0,198,255,0.3)';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('En attente du signal GPS…', W/2, H/2 - 30);
+    return;
+  }
+
+  const lats = gpsTrail.map(p => p.lat), lons = gpsTrail.map(p => p.lon);
+  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const pad  = 40;
+  const toX  = lon => pad + (lon - minLon) / (maxLon - minLon + 0.00001) * (W - pad*2);
+  const toY  = lat => H - pad - (lat - minLat) / (maxLat - minLat + 0.00001) * (H - pad*2);
+
+  // Trail
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(0,114,255,0.5)';
+  ctx.lineWidth = 2;
+  gpsTrail.forEach((p, i) => {
+    i === 0 ? ctx.moveTo(toX(p.lon), toY(p.lat)) : ctx.lineTo(toX(p.lon), toY(p.lat));
+  });
+  ctx.stroke();
+
+  // Position actuelle
+  const last = gpsTrail[gpsTrail.length - 1];
+  const cx = toX(last.lon), cy = toY(last.lat);
+  ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,198,255,0.1)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,198,255,0.2)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI*2);
+  ctx.fillStyle = '#00C6FF'; ctx.fill();
+
+  // Cap (HDG)
+  const hdg = (STATE.data.hdg * Math.PI / 180) - Math.PI/2;
+  const len = 18;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + Math.cos(hdg)*len, cy + Math.sin(hdg)*len);
+  ctx.strokeStyle = '#00C6FF'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Échelle
+  ctx.fillStyle = 'rgba(0,198,255,0.5)';
+  ctx.fillRect(W-80, H-60, 60, 2);
+  ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(0,198,255,0.5)';
+  ctx.fillText('~0.2 nm', W-50, H-65);
+}
+
+// ═══════════════════════════════════════════════════════
+// ALARMS
+// Gestion de toutes les alarmes définies dans l'Arduino :
+//   P_LOW  : pression < SEUIL_PRESSION_MIN
+//   P_HIGH : pression > SEUIL_PRESSION_MAX  ← AJOUTÉ
+//   T_HIGH : temp > SEUIL_TEMP_MAX
+//   NC_LOW : carbu < SEUIL_NIVEAU_MIN
+//   NR_LOW : refroid < SEUIL_NIVEAU_MIN
+//   + GPS et BT comme dans la version originale
+// ═══════════════════════════════════════════════════════
+function checkAlarms() {
+  const d  = STATE.data;
+  const th = STATE.thresholds;
+  const prev = JSON.stringify(STATE.alarmStates);
+
+  STATE.alarmStates = {
+    temp:         d.temp > th.temp,
+    pression_low: d.pression < th.pressionMin && d.pression > 0,
+    pression_high: d.pression > th.pressionMax,
+    carbu:        d.carbu < th.carbu,
+    refroid:      d.refroid < th.refroid,
+    gps:          !d.gpsValid,
+    bt:           !STATE.btConnected && !STATE.simMode
+  };
+
+  if (JSON.stringify(STATE.alarmStates) !== prev) {
+    renderAlarms();
+    Object.entries(STATE.alarmStates).forEach(([k, v]) => {
+      if (v) addLog('⚠️ Alarme : ' + alarmNames[k]);
+    });
+  }
+
+  const activeCount = Object.values(STATE.alarmStates).filter(Boolean).length;
+  const badge = document.getElementById('alarm-badge');
+  badge.style.display = activeCount > 0 ? 'inline' : 'none';
+  badge.textContent   = activeCount;
+}
+
+const alarmNames = {
+  temp:          'Température élevée (T_HIGH)',
+  pression_low:  'Pression huile basse (P_LOW)',
+  pression_high: 'Pression huile excessive (P_HIGH)',
+  carbu:         'Carburant bas (NC_LOW)',
+  refroid:       'Refroidissement bas (NR_LOW)',
+  gps:           'Perte GPS',
+  bt:            'Bluetooth déconnecté'
+};
+const alarmDescs = {
+  temp:          () => `Mesure : ${STATE.data.temp.toFixed(1)}°C — Seuil : ${STATE.thresholds.temp}°C`,
+  pression_low:  () => `Mesure : ${STATE.data.pression.toFixed(2)} PSI — Seuil min : ${STATE.thresholds.pressionMin} PSI`,
+  pression_high: () => `Mesure : ${STATE.data.pression.toFixed(2)} PSI — Seuil max : ${STATE.thresholds.pressionMax} PSI`,
+  carbu:         () => `Mesure : ${STATE.data.carbu.toFixed(1)}% — Seuil : ${STATE.thresholds.carbu}%`,
+  refroid:       () => `Mesure : ${STATE.data.refroid.toFixed(1)}% — Seuil : ${STATE.thresholds.refroid}%`,
+  gps:           () => 'Signal GPS non reçu (module GY-NEO6MV2)',
+  bt:            () => 'Module HC-06 non connecté (Serial1 D18/D19)'
+};
+const alarmIcons = {
+  temp: '🌡️', pression_low: '🛢️', pression_high: '🛢️',
+  carbu: '⛽', refroid: '💧', gps: '📡', bt: '📶'
+};
+
+function renderAlarms() {
+  const active = document.getElementById('alarm-list-active');
+  const all    = document.getElementById('alarm-list-all');
+  active.innerHTML = ''; all.innerHTML = '';
+  const now = new Date().toLocaleTimeString('fr');
+  let hasActive = false;
+
+  Object.entries(STATE.alarmStates).forEach(([k, v]) => {
+    const item = document.createElement('div');
+    item.className = 'alarm-item' + (v ? ' active-alarm' : '');
+    item.innerHTML = `
+      <div class="alarm-icon">${alarmIcons[k]}</div>
+      <div class="alarm-body">
+        <div class="alarm-name">${alarmNames[k]}</div>
+        <div class="alarm-desc">${alarmDescs[k]()}</div>
+        ${v ? `<div class="alarm-time">${now}</div>` : ''}
+      </div>
+      <div class="alarm-badge ${v ? 'danger' : ''}">${v ? '⚠️ ACTIF' : '✓ OK'}</div>`;
+    if (v) { active.appendChild(item.cloneNode(true)); hasActive = true; }
+    all.appendChild(item);
+  });
+  if (!hasActive) active.innerHTML = '<div class="no-data">✅ Aucune alarme active</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// HISTORY — colonnes : Heure, RPM, T°C, Pression(PSI), Carbu%, I1(A)
+// ═══════════════════════════════════════════════════════
+function saveHistoryPoint() {
+  const d = STATE.data;
+  STATE.history.push({
+    time:     new Date().toLocaleTimeString('fr'),
+    date:     new Date().toLocaleDateString('fr'),
+    rpm:      d.rpm,
+    temp:     d.temp.toFixed(1),
+    pression: d.pression.toFixed(2),  // PSI
+    carbu:    d.carbu.toFixed(1),
+    i0:       d.courant[0].toFixed(2),
+    lat:      d.lat  ? d.lat.toFixed(6)  : '--',
+    lon:      d.lon  ? d.lon.toFixed(6)  : '--',
+    couple:   d.couple,
+    refroid:  d.refroid.toFixed(1)
+  });
+  if (STATE.history.length > 1000) STATE.history.shift();
+  if (STATE.activePage === 'history') renderHistoryRows();
+}
+
+function renderHistoryRows() {
+  const container = document.getElementById('history-rows');
+  container.innerHTML = '';
+  const filtered = STATE.history.slice(-60).reverse();
+  if (!filtered.length) {
+    container.innerHTML = '<div class="no-data">Aucun historique disponible</div>';
+    return;
+  }
+  filtered.forEach(h => {
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML = `
+      <span>${h.time}</span>
+      <span>${h.rpm}</span>
+      <span>${h.temp}°</span>
+      <span>${h.pression}</span>
+      <span>${h.carbu}%</span>
+      <span>${h.i0} A</span>`;
+    container.appendChild(row);
+  });
+}
+
+function exportCSV() {
+  if (!STATE.history.length) { showToast('Aucune donnée à exporter'); return; }
+  let csv = 'Date,Heure,RPM,Température(°C),Pression(PSI),Carburant(%),Refroidissement(%),Couple(Nm),Courant I1(A),Latitude,Longitude\n';
+  STATE.history.forEach(h => {
+    csv += `${h.date},${h.time},${h.rpm},${h.temp},${h.pression},${h.carbu},${h.refroid},${h.couple},${h.i0},${h.lat},${h.lon}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'enship_historique_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  showToast('Export CSV téléchargé');
+  addLog('Export CSV effectué');
+}
+
+function exportPDF() {
+  showToast('Impression navigateur (PDF)…');
+  window.print();
+}
+
+// ═══════════════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════════════
+function buildEqNamesGrid() {
+  const grid = document.getElementById('eq-names-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  STATE.eqNames.forEach((name, i) => {
+    const div = document.createElement('div');
+    div.className = 'eq-name-item';
+    // Libellé indiquant le canal MUX (Ci/Vi = MUX1/MUX2 canal i)
+    div.innerHTML = `<label>C${i}/V${i}</label><input id="eq-name-${i}" value="${name}">`;
+    grid.appendChild(div);
+  });
+}
+
+function saveEqNames() {
+  for (let i = 0; i < 8; i++) {
+    const inp = document.getElementById('eq-name-' + i);
+    if (inp) STATE.eqNames[i] = inp.value || STATE.eqNames[i];
+  }
+  showToast('Noms enregistrés');
+  addLog('Noms des équipements mis à jour');
+  updateUI();
+}
+
+function saveThresholds() {
+  const newTemp     = parseFloat(document.getElementById('th-temp').value) || 95;
+  const newPresMin  = parseFloat(document.getElementById('th-pression-min').value) || 1.5;
+  const newPresMax  = parseFloat(document.getElementById('th-pression-max').value) || 5.0;
+  const newCarbu    = parseFloat(document.getElementById('th-carbu').value) || 10;
+  const newRefroid  = parseFloat(document.getElementById('th-refroid').value) || 10;
+
+  STATE.thresholds.temp         = newTemp;
+  STATE.thresholds.pressionMin  = newPresMin;
+  STATE.thresholds.pressionMax  = newPresMax;
+  STATE.thresholds.carbu        = newCarbu;
+  STATE.thresholds.refroid      = newRefroid;
+
+  // Envoi des commandes AT à l'Arduino via BT (si connecté)
+  // Commandes définies en section 8.3 du dossier technique
+  if (STATE.btConnected && STATE.btCharacteristic) {
+    sendBTCommand(`$SET_SEUIL_TEMP,${newTemp}`);
+    sendBTCommand(`$SET_SEUIL_PRESSION,${newPresMin}`);
+    sendBTCommand(`$SET_SEUIL_CARBU,${newCarbu}`);
+  }
+
+  showToast('Seuils appliqués' + (STATE.btConnected ? ' + envoyés Arduino' : ''));
+  addLog(`Seuils : T≤${newTemp}°C P∈[${newPresMin};${newPresMax}]PSI Carbu≥${newCarbu}% Refr≥${newRefroid}%`);
+  checkAlarms();
+}
+
+function buildUserList() {
+  const ul = document.getElementById('user-list');
+  ul.innerHTML = '';
+  STATE.users.forEach((u, i) => {
+    const div = document.createElement('div');
+    div.className = 'user-item';
+    div.innerHTML = `
+      <div class="user-avatar">${u.emoji}</div>
+      <div class="user-info">
+        <div class="user-name">${u.id}</div>
+        <div class="user-role">${u.role}</div>
+      </div>
+      ${u.id !== 'admin' && u.id !== 'visiteur'
+        ? `<button class="btn-del" onclick="removeUser(${i})">Supprimer</button>` : ''}`;
+    ul.appendChild(div);
+  });
+}
+
+function addUser() {
+  const inp = document.getElementById('new-user');
+  const id  = inp.value.trim();
+  if (!id) return;
+  STATE.users.push({ id, role: 'Visiteur', emoji: '👤' });
+  CREDS[id] = '';
+  inp.value = '';
+  buildUserList();
+  showToast('Utilisateur "' + id + '" ajouté');
+  addLog('Utilisateur ajouté : ' + id);
+}
+
+function removeUser(i) {
+  const u = STATE.users[i];
+  delete CREDS[u.id];
+  STATE.users.splice(i, 1);
+  buildUserList();
+  showToast('Utilisateur supprimé');
+  addLog('Utilisateur supprimé : ' + u.id);
+}
+
+function clearLogs() {
+  STATE.logs = [];
+  document.getElementById('log-container').innerHTML = '';
+  showToast('Journal vidé');
+}
+
+// ═══════════════════════════════════════════════════════
+// BLUETOOTH
+// Parsing complet du protocole défini en section 8 du dossier :
+//   $DATA  → mise à jour données (section 8.2)
+//   $ALARM → mise à jour alarmes (section 8.2)
+//   $PONG  → réponse au $PING (section 8.2)
+//   Trames envoyées : $PING, $SET_SEUIL_*, $GET_CONF, $RESET_ALARME (section 8.3)
+// ═══════════════════════════════════════════════════════
+function openBTModal() {
+  document.getElementById('bt-modal').classList.add('open');
+  scanDevices();
+}
+function closeBTModal() {
+  document.getElementById('bt-modal').classList.remove('open');
+}
+
+function scanDevices() {
+  const devDiv = document.getElementById('bt-devices');
+  document.getElementById('bt-scanning').style.display = 'block';
+  devDiv.innerHTML = '';
+  setTimeout(() => {
+    document.getElementById('bt-scanning').style.display = 'none';
+    if (!navigator.bluetooth) {
+      // Pas de Web Bluetooth — afficher appareils connus (nom configuré via AT+NAME)
+      const devices = [
+        { name: 'EnerShip_BT', mac: '00:14:03:06:A2:1F', rssi: -62 },
+        { name: 'HC-06',       mac: '20:16:03:10:B1:4A', rssi: -75 }
+      ];
+      devices.forEach(dev => {
+        const div = document.createElement('div');
+        div.className = 'device-item';
+        div.innerHTML = `
+          <div class="device-icon">📶</div>
+          <div style="flex:1">
+            <div class="device-name">${dev.name}</div>
+            <div class="device-mac">${dev.mac} · ${dev.rssi} dBm</div>
+          </div>
+          <button class="btn-sm btn-accent" onclick="connectDevice('${dev.name}')">Connecter</button>`;
+        devDiv.appendChild(div);
+      });
+    } else {
+      const div = document.createElement('div');
+      div.className = 'device-item';
+      div.innerHTML = `
+        <div class="device-icon">🔍</div>
+        <div><div class="device-name">Rechercher via Web Bluetooth</div>
+        <div class="device-mac">Chrome Android – SPP HC-06</div></div>`;
+      div.onclick = connectWebBluetooth;
+      devDiv.appendChild(div);
+    }
+  }, 1800);
+}
+
+function connectDevice(name) {
+  closeBTModal();
+  STATE.btConnected = true;
+  document.getElementById('bt-dot').classList.add('connected');
+  document.getElementById('bt-label').textContent = name;
+  document.getElementById('sb-refresh').textContent = 'Live BT';
+  if (STATE.simMode) toggleSimulation(); // Désactiver la simulation auto
+  showToast('Connecté à ' + name);
+  addLog('Bluetooth connecté : ' + name);
+}
+
+// Callback générique de connexion réussie (Android natif ou Web BT)
+function onConnected(name) {
+  connectDevice(name);
+}
+
+// Callback générique de déconnexion
+function onDisconnected(reason) {
+  STATE.btConnected = false;
+  STATE.btCharacteristic = null;
+  document.getElementById('bt-dot').classList.remove('connected');
+  document.getElementById('bt-label').textContent = 'Déconnecté';
+  document.getElementById('sb-refresh').textContent = STATE.simMode ? 'Simulation' : 'Live BT';
+  showToast('Bluetooth déconnecté : ' + reason);
+  addLog('Bluetooth déconnecté : ' + reason);
+}
+
+async function connectWebBluetooth() {
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ name: 'EnerShip_BT' }, { name: 'HC-06' }],
+      optionalServices: ['00001101-0000-1000-8000-00805f9b34fb']
+    });
+    const server  = await device.gatt.connect();
+    const service = await server.getPrimaryService('00001101-0000-1000-8000-00805f9b34fb');
+    STATE.btCharacteristic = await service.getCharacteristic('00001101-0000-1000-8000-00805f9b34fb');
+    await STATE.btCharacteristic.startNotifications();
+    STATE.btCharacteristic.addEventListener('characteristicvaluechanged', onBTData);
+    connectDevice(device.name);
+  } catch(e) {
+    showToast('Bluetooth : ' + e.message);
+    addLog('Erreur BT : ' + e.message);
+  }
+}
+
+let btBuffer = '';
+function onBTData(event) {
+  const decoder = new TextDecoder();
+  btBuffer += decoder.decode(event.target.value);
+  // Traiter toutes les trames complètes (terminées par \n)
+  const lines = btBuffer.split('\n');
+  btBuffer = lines.pop(); // Garder la trame incomplète
+  lines.forEach(line => {
+    line = line.trim();
+    if (line.startsWith('$DATA,'))  parseBTFrame(line);
+    else if (line.startsWith('$ALARM,')) parseAlarmFrame(line);
+    else if (line.startsWith('$PONG'))   addLog('← $PONG reçu (Arduino OK)');
+    else if (line.startsWith('$CONF,'))  addLog('← Config Arduino : ' + line);
+    else if (line.startsWith('$ACK,'))   addLog('← ACK Arduino : ' + line);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// PARSER $DATA
+// Format : $DATA,C0..C7,V0..V7,P,T,NC,NR,CPL,RPM,LAT,LON,SPD,HDG*CS
+// Index après header :
+//   0–7  : courants (A) — ACS712-20A
+//   8–15 : tensions (V) — diviseur 5:1
+//   16   : pression (PSI) — MPRLS  ← PAS de conversion, l'Arduino envoie déjà en PSI
+//   17   : température (°C) — DS18B20
+//   18   : niveau carburant (%) — SEN0205 A4
+//   19   : niveau refroid (%) — SEN0205 A5
+//   20   : couple (Nm) — FIBOS FA117
+//   21   : RPM (tr/min) — Hall
+//   22   : latitude (° décimaux ou 'NA')
+//   23   : longitude (° décimaux ou 'NA')
+//   24   : vitesse (nœuds)
+//   25   : cap (degrés)
+// ═══════════════════════════════════════════════════════
+function parseBTFrame(raw) {
+  const line = raw.trim();
+  if (!line.startsWith('$DATA')) return;
+  // Retirer le checksum *XX éventuel, puis l'entête "$DATA,"
+  const noCs = line.replace(/\*[0-9A-Fa-f]+$/, '');
+  const body = noCs.replace(/^\$DATA,?/, '');
+  const parts = body.split(',');
+  if (parts.length < 22) {
+    addLog('Trame $DATA invalide (' + parts.length + ' champs) : ' + line);
+    return;
+  }
+  const d = STATE.data;
+  for (let i = 0; i < 8; i++) d.courant[i] = parseFloat(parts[i])     || 0;
+  for (let i = 0; i < 8; i++) d.tension[i] = parseFloat(parts[8+i])   || 0;
+  d.pression = parseFloat(parts[16]) || 0;  // PSI — aucune conversion
+  d.temp     = parseFloat(parts[17]) || 0;
+  d.carbu    = parseFloat(parts[18]) || 0;
+  d.refroid  = parseFloat(parts[19]) || 0;
+  d.couple   = parseFloat(parts[20]) || 0;
+  d.rpm      = parseFloat(parts[21]) || 0;
+  d.lat      = (parts[22] && parts[22] !== 'NA') ? parseFloat(parts[22]) : null;
+  d.lon      = (parts[23] && parts[23] !== 'NA') ? parseFloat(parts[23]) : null;
+  d.spd      = parseFloat(parts[24]) || 0;
+  d.hdg      = parseFloat(parts[25]) || 0;
+  d.gpsValid = d.lat !== null && !isNaN(d.lat);
+  if (d.gpsValid) {
+    gpsTrail.push({ lat: d.lat, lon: d.lon });
+    if (gpsTrail.length > 80) gpsTrail.shift();
+  }
+  updateUI();
+  checkAlarms();
+}
+
+// ═══════════════════════════════════════════════════════
+// PARSER $ALARM — section 8.2 du dossier
+// Format : $ALARM,CODE,VALEUR,SEUIL*CS  (ou $ALARM,CODE*CS)
+// Codes : P_LOW, P_HIGH, T_HIGH, NC_LOW, NR_LOW
+// ═══════════════════════════════════════════════════════
+function parseAlarmFrame(raw) {
+  const line  = raw.trim().replace(/\*[0-9A-Fa-f]+\r?$/, '');
+  const parts = line.substring(7).split(','); // après "$ALARM,"
+  const code  = parts[0];
+  const val   = parts[1] || '';
+  const seuil = parts[2] || '';
+  const map   = { P_LOW:'pression_low', P_HIGH:'pression_high', T_HIGH:'temp', NC_LOW:'carbu', NR_LOW:'refroid' };
+  const key   = map[code];
+  const desc  = `Arduino: $ALARM,${code}` + (val ? ` val=${val}` : '') + (seuil ? ` seuil=${seuil}` : '');
+  addLog('🚨 ' + desc);
+  if (key) { STATE.alarmStates[key] = true; renderAlarms(); }
+  const activeCount = Object.values(STATE.alarmStates).filter(Boolean).length;
+  const badge = document.getElementById('alarm-badge');
+  badge.style.display = activeCount > 0 ? 'inline' : 'none';
+  badge.textContent = activeCount;
+}
+
+// Envoi d'une commande AT à l'Arduino (section 8.3)
+function sendBTCommand(cmd) {
+  if (!STATE.btCharacteristic) return;
+  const encoder = new TextEncoder();
+  STATE.btCharacteristic.writeValue(encoder.encode(cmd + '\n'))
+    .then(() => addLog('→ ' + cmd))
+    .catch(e => addLog('Erreur envoi BT : ' + e.message));
+}
+
+function sendPing() {
+  if (!STATE.btConnected) { showToast('Non connecté au HC-06'); return; }
+  sendBTCommand('$PING');
+  addLog('→ $PING envoyé');
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function updateStatusBar() {
+  document.getElementById('sb-time').textContent = new Date().toLocaleTimeString('fr');
+}
+
+function addLog(msg) {
+  const t = new Date().toLocaleTimeString('fr');
+  STATE.logs.unshift({ time: t, msg });
+  if (STATE.logs.length > 200) STATE.logs.pop();
+  const container = document.getElementById('log-container');
+  if (!container) return;
+  container.innerHTML = STATE.logs.slice(0, 50).map(l =>
+    `<div class="log-entry"><span class="log-time">[${l.time}]</span> <span class="log-msg">${l.msg}</span></div>`
+  ).join('');
+}
+
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+window.addEventListener('resize', drawMap);
+
+// ═══════════════════════════════════════════════════════════════════
+// ANDROID BLUETOOTH CLASSIC BRIDGE (HC-06 SPP)
+// Remplace Web Bluetooth/Serial quand l'app tourne dans l'APK Android
+// L'interface Java "AndroidBT" est injectée par MainActivity.java
+// ═══════════════════════════════════════════════════════════════════
+const IS_ANDROID_APP = (typeof AndroidBT !== 'undefined');
+
+// Surcharge openBTModal pour Android
+if (IS_ANDROID_APP) {
+  // Android : on lance le scan natif immédiatement
+  window._origOpenBTModal = openBTModal;
+  openBTModal = function() {
+    document.getElementById('bt-modal').classList.add('open');
+    androidScanDevices();
+  };
+}
+
+function androidScanDevices() {
+  const devDiv = document.getElementById('bt-devices');
+  // Masquer les panneaux optionnels s'ils existent (null-safe selon la version du DOM)
+  const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+  hide('panel-serial');
+  hide('panel-ble');
+  hide('bt-info-banner');
+  hide('bt-scanning');
+  document.querySelectorAll('.conn-tab').forEach(t => t.style.display = 'none');
+
+  devDiv.innerHTML = '<div style="text-align:center;padding:12px;color:var(--muted)"><span class="pulse">🔍 Scan Bluetooth HC-06…</span></div>';
+
+  try {
+    const paired = AndroidBT.getPairedDevices(); // JSON array [{name,address}]
+    const devices = JSON.parse(paired);
+    devDiv.innerHTML = '';
+    if (devices.length === 0) {
+      devDiv.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px">Aucun appareil jumelé.<br>Jumelez d\'abord le HC-06 dans les paramètres Bluetooth Android.</div>';
+      return;
+    }
+    devices.forEach(dev => {
+      const div = document.createElement('div');
+      div.className = 'device-item';
+      div.innerHTML = `
+        <div class="device-icon">📶</div>
+        <div style="flex:1">
+          <div class="device-name">${dev.name}</div>
+          <div class="device-mac">${dev.address}</div>
+        </div>
+        <button class="btn-sm btn-accent" onclick="androidConnect('${dev.address}','${dev.name}')">Connecter</button>`;
+      devDiv.appendChild(div);
+    });
+  } catch(e) {
+    devDiv.innerHTML = '<div style="color:var(--danger);font-size:13px;padding:12px">Erreur scan : ' + e.message + '</div>';
+  }
+}
+
+function androidConnect(address, name) {
+  // IMPORTANT : AndroidBT.connect() est ASYNCHRONE (thread Java).
+  // On NE marque PAS « connecté » ici. On attend le callback réel
+  // window.onAndroidBTConnected() émis par Java APRÈS l'ouverture
+  // effective du socket RFCOMM. C'était la cause du bug « connecté
+  // mais aucune donnée » : l'UI s'affichait connectée alors que le
+  // socket n'était pas réellement établi (donc aucune lecture).
+  try {
+    pendingDeviceName = name + ' (HC-06)';
+    showToast('Connexion à ' + name + '…');
+    addLog('Tentative de connexion BT : ' + name + ' (' + address + ')');
+    AndroidBT.connect(address);
+  } catch(e) {
+    showToast('Erreur connexion : ' + e.message);
+    addLog('Erreur Android BT : ' + e.message);
+  }
+}
+
+// Décodeur Base64 → chaîne UTF-8 (utilisé par les callbacks Java)
+window.__b64 = function(b64) {
+  try { return decodeURIComponent(escape(atob(b64))); }
+  catch(e) { try { return atob(b64); } catch(_) { return ''; } }
+};
+
+let pendingDeviceName = 'HC-06';
+
+// Callback émis par Java APRÈS connexion réelle du socket
+window.onAndroidBTConnected = function(name) {
+  closeBTModal();
+  connectDevice(name || pendingDeviceName);
+};
+
+// Traitement commun d'une ligne reçue
+function handleBTLine(line) {
+  line = (line || '').trim();
+  if (!line) return;
+  if (line.startsWith('$DATA'))       parseBTFrame(line);
+  else if (line.startsWith('$ALARM')) parseAlarmFrame(line);
+  else if (line.startsWith('$PONG'))  addLog('← $PONG (Arduino OK)');
+  else if (line.startsWith('$CONF'))  addLog('← Config : ' + line);
+  else if (line.startsWith('$ACK'))   addLog('← ACK : ' + line);
+  else addLog('← (ignoré) ' + line);
+}
+
+// Callback Java — données reçues, encodées en Base64 (évite tout
+// problème d'échappement de guillemets/caractères spéciaux qui
+// pouvait faire « disparaître » des trames côté JS)
+window.onAndroidBTDataB64 = function(b64) {
+  const data = window.__b64(b64);
+  data.split('\n').forEach(handleBTLine);
+};
+
+// Rétro-compatibilité : ancien callback texte brut (si jamais appelé)
+window.onAndroidBTData = function(data) {
+  (data || '').split('\n').forEach(handleBTLine);
+};
+
+// Callback appelé par Java en cas de déconnexion
+window.onAndroidBTDisconnected = function(reason) {
+  onDisconnected(reason || 'déconnecté');
+};
+
+// Surcharge sendBTCommand pour Android
+if (IS_ANDROID_APP) {
+  const _origSendBTCommand = sendBTCommand;
+  sendBTCommand = function(cmd) {
+    if (STATE.btConnected && typeof AndroidBT !== 'undefined') {
+      try {
+        AndroidBT.send(cmd + '\n');
+        addLog('→ ' + cmd);
+      } catch(e) { addLog('Erreur envoi Android BT : ' + e.message); }
+    } else {
+      _origSendBTCommand(cmd);
+    }
+  };
+}
+
+</script>
+</body>
+</html>
