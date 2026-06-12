@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">#0A0E1A</item>
-        <item name="android:statusBarColor">#111827</item>
-        <item name="android:navigationBarColor">#111827</item>
-        <item name="colorPrimary">#00C6FF</item>
-        <item name="colorPrimaryDark">#0072FF</item>
-        <item name="colorAccent">#00C6FF</item>
+    <!-- Base theme applied before Compose takes over. Dark nautical. -->
+    <style name="Theme.EnerShip" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/nautical_background</item>
+        <item name="android:statusBarColor">@color/nautical_surface</item>
+        <item name="android:navigationBarColor">@color/nautical_surface</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>
